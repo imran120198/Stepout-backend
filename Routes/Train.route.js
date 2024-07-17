@@ -1,11 +1,11 @@
 const { Router } = require("express");
-const adminAuth = require("../Middleware/admin");
 const { TrainModel } = require("../Model/Train.model");
+const { authentication } = require("../Middleware/authentication");
 
 const TrainRouter = Router();
 
 // Add Train
-TrainRouter.post("/", adminAuth, async (req, res) => {
+TrainRouter.post("/", authentication, async (req, res) => {
   try {
     const { trainId, name, source, destination, totalSeats } = req.body;
     const train = new TrainModel({
