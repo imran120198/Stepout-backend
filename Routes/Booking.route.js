@@ -8,14 +8,14 @@ const BookingRoute = Router();
 BookingRoute.post("/", authentication, async (req, res) => {
   try {
     const { trainId, seats } = req.body;
-    const train = await TrainModel.findById(trainId);
+    const train = await TrainModel.find({ trainId });
 
     if (!train) {
-      return res.send({ error: "Train not found" });
+      return res.status(404).send({ error: "Train not found" });
     }
 
     if (train.availableSeats < seats) {
-      return res.send({ error: "Not enough seats available" });
+      return res.status(400).send({ error: "Not enough seats available" });
     }
 
     const updatedTrain = await TrainModel.findOneAndUpdate(
@@ -25,33 +25,30 @@ BookingRoute.post("/", authentication, async (req, res) => {
     );
 
     if (!updatedTrain) {
-      return res.send({
+      return res.status(400).send({
         error: "Not enough seats available or train not found",
       });
     }
 
-    const booking = new BookingModel({
-      userId: req.user._id,
+    console.log(req.user.userId);
+    const newBooking = new BookingModel({
+      userId: req.user.userId,
       trainId,
       seatsBooked: seats,
     });
+    await newBooking.save();
 
-    await booking.save();
-    res.status(201).send(booking);
-  } catch (err) {
-    res.status(400).send(err);
+    res.status(200).send({ message: "Booking successful!" });
+  } catch (error) {
+    console.error("Booking error:", error);
+    res.status(500).send({ error: "Internal Server Error" });
   }
 });
 
-BookingRoute.get(":id", authentication, async (req, res) => {
+BookingRoute.get("/:id", authentication, async (req, res) => {
   try {
     const { id } = req.params;
-    const booking = await BookingModel.findById(id)
-      .populate("userId")
-      .populate("trainId");
-    if (!booking || booking.userId._id.toString() !== req.user._id.toString()) {
-      throw new Error("Booking not found");
-    }
+    const booking = await BookingModel.findById({ _id: id });
     res.send(booking);
   } catch (err) {
     res.status(400).send(err);
