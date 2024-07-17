@@ -9,9 +9,8 @@ const authentication = (req, res, next) => {
   }
 
   const decoded = jwt.verify(token, process.env.JWT_KEY);
-  const userId = decoded.userId;
   if (decoded) {
-    req.body.userId = userId;
+    req.user = decoded;
     next();
   } else {
     res.send("Plase login");
